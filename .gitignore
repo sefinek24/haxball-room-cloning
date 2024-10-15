@@ -1,0 +1,7 @@
+.idea
+chrome
+node_modules
+.env
+proxies.txt
+proxies2.txt
+tokens.json

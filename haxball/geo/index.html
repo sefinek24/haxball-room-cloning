@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="main.js" defer></script>
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables/dist/js/tabulator.min.js"></script>
+    <link href="stylesheets/tabulator_haxball.min.css" rel="stylesheet">
+    <link href="stylesheets/flag_icons.css" rel="stylesheet">
+    <title>Haxball Rooms API Parser</title>
+</head>
+
+<body>
+    <button type="button">Load rooms</button>
+    <p class="stats"></p><br>
+    <div>
+        <select id="filter-field">
+            <option value="name">Name</option>
+            <option value="flag">Flag</option>
+        </select>
+        <input id="filter-value" type="text" placeholder="Enter to filter">
+        <button id="filter-clear">Clear Filter</button>
+    </div>
+    <div id="room-list"></div>
+</body>
+
+</html>

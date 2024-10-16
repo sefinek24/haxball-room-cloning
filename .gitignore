@@ -4,5 +4,6 @@ node_modules
 .env
 proxies.txt
 proxies2.txt
+proxies22.txt
 tokens.json
 scripts/arrays.original.js

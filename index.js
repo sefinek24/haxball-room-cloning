@@ -4,7 +4,6 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const proxyChain = require('proxy-chain');
 const path = require('node:path');
-const randomUserAgent = require('./scripts/randomUserAgent.js');
 const getRandomGeoLocation = require('./scripts/getRandomGeoLocation.js');
 const browserArgs = require('./scripts/args.js');
 const loadProxies = require('./scripts/loadProxies.js');
@@ -60,7 +59,6 @@ const launchBrowserWithTwoTabs = async (roomConfigs, proxies, stats) => {
 	stats.browsers++;
 	stats.tabs += roomConfigs.length;
 
-	const userAgent = randomUserAgent();
 	const pages = await browser.pages();
 	let firstPageUsed = false;
 
@@ -81,11 +79,9 @@ const launchBrowserWithTwoTabs = async (roomConfigs, proxies, stats) => {
 				else console.log(`[${cfg.index}.${browserId}]`, text);
 			});
 
-			await page.setUserAgent(userAgent.toString());
-
 			cfg.browserId = browserId;
 
-			console.log(`[${cfg.index}.${browserId}] Launching "${cfg.roomName}" [${cfg.country?.toUpperCase()}]; Token: "${cfg.token}"; ${userAgent}`);
+			console.log(`[${cfg.index}.${browserId}] Launching "${cfg.roomName}" [${cfg.country?.toUpperCase()}]; Token: "${cfg.token}"`);
 			await page.goto('https://www.haxball.com/headless', { waitUntil: 'networkidle0' });
 
 			await injectRoomScript(page, cfg);

@@ -12,7 +12,7 @@ module.exports = async () => {
 			return [];
 		}
 
-		return res.data.length > 0 ? res.data[0] : { country: 'pl', lat: 52.2296752929688, lon: 21.0122299194336 };
+		return res.data?.rooms.length > 0 ? res.data.rooms[0] : { country: 'ru', lat: 55.751244, lon: 37.618423 };
 	} catch (err) {
 		console.error(err);
 		return [];

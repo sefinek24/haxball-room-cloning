@@ -145,8 +145,8 @@ const checkGeoUpdate = async () => {
 		const res = await fetch(`https://api.sefinek.net/api/v2/haxball/room-list?name=${roomNameToClone}`);
 		const data = await res.json();
 
-		if (data.length > 0) {
-			const newGeo = { country: data[0].country, lat: data[0].lat, lon: data[0].lon };
+		if (data.rooms.length > 0) {
+			const newGeo = { country: data.rooms[0].country, lat: data.rooms[0].lat, lon: data.rooms[0].lon };
 			if (newGeo.country !== currentGeo.country || (!ignoreGeo && (newGeo.lat !== currentGeo.lat || newGeo.lon !== currentGeo.lon))) {
 				console.log('=== Geo data changed ====');
 				console.log('Old:', JSON.stringify(currentGeo));

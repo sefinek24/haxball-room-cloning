@@ -11,7 +11,7 @@ console.log('Chrome:', chromePath);
 module.exports = async (proxy, userDataDir, browserArgs) => {
 	const anonymizedProxy = proxy ? await ProxyChain.anonymizeProxy(proxy) : null;
 	return await puppeteer.launch({
-		headless: false,
+		headless: process.env.BOTS === 'false',
 		executablePath: chromePath,
 		userDataDir,
 		ignoreDefaultArgs: [

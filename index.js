@@ -96,7 +96,7 @@ const launchBrowserWithTwoTabs = async (roomConfigs, proxies, stats) => {
 		}
 
 		if (stats.browsers >= 5) return;
-		await sleep(3000);
+		await sleep(5000);
 
 		const maxRuns = Math.floor(Math.random() * 4);
 		for (let runCount = 0; runCount < maxRuns; runCount++) {

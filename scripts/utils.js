@@ -3,6 +3,9 @@ const fs = require('node:fs');
 const crypto = require('node:crypto');
 const sleep = require('./sleep.js');
 
+const blockedResources = new Set(['image', 'icon', 'imageset', 'font', 'media', 'blob', 'websocket', 'application']);
+const blockedDomains = 'server.cpmstar.com';
+
 const createProfileDir = () => {
 	const profilePath = path.join(__dirname, '..', 'chrome', 'profiles', 'raid', Date.now().toString());
 	if (!fs.existsSync(profilePath)) fs.mkdirSync(profilePath, { recursive: true });
@@ -55,15 +58,24 @@ const simulateMovement = async (gameView, page) => {
 
 const openTargetRoom = async (page, targetRoom) => {
 	try {
+		await page.setRequestInterception(true);
+		page.on('request', (req) => {
+			if (blockedResources.has(req.resourceType()) || req.url().includes(blockedDomains)) {
+				req.abort();
+				// console.debug(`Blocked: ${req.url()}`);
+			} else {
+				req.continue();
+			}
+		});
+
 		await page.goto(targetRoom, { waitUntil: 'networkidle0' });
 		console.log(`Navigated to ${targetRoom}`);
-	} catch (e) {
-		console.error(`Error while loading the page: ${e.message}`);
+	} catch (err) {
+		console.error(`Error while loading the page: ${err.message}`);
 	}
-	page.setDefaultNavigationTimeout(0);
 };
 
-const waitForSelectorWithRetry = async (frame, selector, options = {}, retries = 3, delay = 4000) => {
+const waitForSelector = async (frame, selector, options = {}, retries = 3, delay = 4000) => {
 	for (let attempt = 1; attempt <= retries; attempt++) {
 		try {
 			return await frame.waitForSelector(selector, options);
@@ -82,44 +94,46 @@ const waitForSelectorWithRetry = async (frame, selector, options = {}, retries =
 
 const setNickname = async (frame, randomNick) => {
 	const nicknameInput = await frame.$('input[data-hook="input"]');
-	if (nicknameInput) {
-		const currentValue = await frame.evaluate(input => input.value, nicknameInput);
-		if (currentValue) {
-			await nicknameInput.click({ clickCount: 3 });
-			await nicknameInput.press('Backspace');
-		}
-		await frame.type('input[data-hook="input"]', randomNick, { delay: 10 });
-		const okButton = await frame.$('button[data-hook="ok"]');
-		if (okButton) await okButton.click();
+	if (!nicknameInput) return console.warn('Nickname input not found.');
+
+	await nicknameInput.click({ clickCount: 3 });
+	await frame.evaluate(input => input.value = '', nicknameInput);
+
+	await nicknameInput.type(randomNick);
+
+	const okButton = await frame.$('button[data-hook="ok"]');
+	if (okButton) {
+		await okButton.click();
 		console.log(`New nickname '${randomNick}' submitted`);
-	} else {
-		console.warn('Nickname input not found.');
 	}
 };
 
 const sendMessages = async (chatInput, MESSAGES_ARRAY, kill) => {
 	const messageIntervalId = setInterval(async () => {
 		try {
-			await chatInput.click();
-			await chatInput.type(MESSAGES_ARRAY[Math.floor(Math.random() * MESSAGES_ARRAY.length)], { delay: 1 });
+			await chatInput.focus();
+			const msg = MESSAGES_ARRAY[Math.floor(Math.random() * MESSAGES_ARRAY.length)];
+			await chatInput.type(msg);
 			await chatInput.press('Enter');
+			console.debug(`Random message: ${msg}`);
 		} catch (err) {
 			clearInterval(messageIntervalId);
 			console.warn(`Error while sending messages: ${err.message}`);
 			if (kill) process.exit(666);
 		}
-	}, 1500);
+	}, 2000);
+
 	await sleep(9000);
 	clearInterval(messageIntervalId);
 };
 
-const handleRoom = async (frame, frame2, randomNick, MESSAGES_ARRAY, page, kill) => {
+const handleRoom = async (frame, randomNick, MESSAGES_ARRAY, page, kill) => {
 	await setNickname(frame, randomNick);
-	const chatInput = await waitForSelectorWithRetry(frame2, 'input[data-hook="input"]', { visible: true, timeout: 360000 });
+	const chatInput = await waitForSelector(frame, 'input[data-hook="input"]', { visible: true, timeout: 360000 });
 	if (!chatInput) return;
 
-	console.log(`Connected! Username: ${randomNick}`);
-	const gameView = await frame2.$('.game-view');
+	console.log(`Joined as ${randomNick}`);
+	const gameView = await frame.$('.game-view');
 	if (gameView) {
 		const executeLoop = async () => {
 			await sendMessages(chatInput, MESSAGES_ARRAY, kill);
@@ -135,8 +149,7 @@ const handleRoom = async (frame, frame2, randomNick, MESSAGES_ARRAY, page, kill)
 const setupRoom = async (page, randomNick, messagesArray, kill = false) => {
 	const frame = page.frames().find(f => f.url().includes('game.html'));
 	if (frame) {
-		const frame2 = page.frames().find(f => f.url().includes('game.html'));
-		await handleRoom(frame, frame2, randomNick, messagesArray, page, kill);
+		await handleRoom(frame, randomNick, messagesArray, page, kill);
 	} else {
 		console.warn('Iframe not found.');
 	}
@@ -146,7 +159,7 @@ module.exports = {
 	createProfileDir,
 	getRandomNickname,
 	pressRandomKeysForMovement,
-	waitForSelectorWithRetry,
+	waitForSelector,
 	openTargetRoom,
 	handleRoom,
 	setupRoom

@@ -1,7 +1,7 @@
 const fs = require('node:fs/promises');
 const getToken = require('./services/getToken');
 
-module.exports = async (page, cfg) => {
+module.exports = async (page, cfg, USERNAMES) => {
 	const token = await getToken(cfg.index);
 
 	let scriptContent = await fs.readFile('./haxball/room.js', 'utf8');
@@ -13,12 +13,13 @@ module.exports = async (page, cfg) => {
 		.replace(/'\{GEO_LAT}'/g, cfg.lat)
 		.replace(/'\{GEO_LON}'/g, cfg.lon)
 
-		.replace(/\{PASSWORD}/g, process.env.PASSWORD)
 		.replace(/\{TOKEN}/g, token)
 		.replace(/\{ROOM_NAME}/g, cfg.roomName)
 		.replace(/\{ROOM_NAME_TO_CLONE}/g, process.env.ROOM_NAME_TO_CLONE)
 
-		.replace(/'\{CAPTCHA}'/g, process.env.CAPTCHA === 'true' || !process.env.CAPTCHA);
+		.replace(/'\{CAPTCHA}'/g, process.env.CAPTCHA === 'true' || !process.env.CAPTCHA)
+
+		.replace(/'\{USERNAMES}'/g, JSON.stringify(USERNAMES));
 
 	await page.evaluate((script, style) => {
 		const scriptTag = document.createElement('script');

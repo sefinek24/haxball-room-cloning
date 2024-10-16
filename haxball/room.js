@@ -4,13 +4,14 @@ const currentGeo = { country: '{COUNTRY}', lat: '{GEO_LAT}', lon: '{GEO_LON}' };
 const roomName = '{ROOM_NAME}';
 const roomNameToClone = '{ROOM_NAME_TO_CLONE}';
 const captcha = '{CAPTCHA}';
+const usernamesArray = '{USERNAMES}';
 
 const createRoom = async () => {
 	const room = HBInit({
 		roomName,
 		maxPlayers: 16,
-		public: true,
-		password: env === 'development' ? '{PASSWORD}' : null,
+		public: env === 'production',
+		password: null,
 		playerName: 'KPYRHAX.PRO',
 		token: '{TOKEN}',
 		noPlayer: true,
@@ -109,13 +110,13 @@ const createRoom = async () => {
 		room.setPlayerTeam(player.id, redTeamCount > blueTeamCount ? 2 : 1);
 
 		if (!room.getScores()) room.startGame();
-		if (!messageInterval) messageInterval = setInterval(sendMessage, intervalTime);
+		if (!messageInterval && !usernamesArray.includes(player.name)) messageInterval = setInterval(sendMessage, intervalTime);
 	};
 
 	room.onPlayerLeave = player => {
 		console.log(`Disconnected ${player.name}`);
 		if (room.getPlayerList().length === 0) room.stopGame();
-		if (room.getPlayerList().length !== 0) return;
+		if (room.getPlayerList().length !== 0 && !usernamesArray.includes(player.name)) return;
 		clearInterval(messageInterval);
 		messageInterval = null;
 		intervalTime = 100;

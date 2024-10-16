@@ -12,7 +12,6 @@ const sleep = require('./scripts/sleep.js');
 const USERNAMES = ['Zdun lamus', 'Zdun to kurwa', 'Sukinsyn Zdun', 'Rumpolog to pizda', 'Jebać Zduna', 'Knur Rumpolog', 'Wielki Knurzy Zdun', 'Pierdolony Knuras Zdun', 'Skurwysyn Zdun', 'Poker Syn Kurwy'];
 const MESSAGES = ['﷽﷽ ﷽﷽﷽ ﷽﷽﷽', 'Zdun to jebany prawiczek', '000 POKER TO SYN KURWY 0000'];
 
-const chromePath = path.join(__dirname, 'chrome', `${process.env.NODE_ENV === 'production' ? 'linux' : 'win64'}-126.0.6478.182`, `chrome-${process.env.NODE_ENV === 'production' ? 'linux64' : 'win64'}`, `chrome${process.env.NODE_ENV === 'production' ? '' : '.exe'}`);
 const connection = new huaweiLteApi.Connection(process.env.ROUTER_URL);
 
 // const rebootRouter = async () => {
@@ -79,7 +78,7 @@ const initializeBrowser = async (proxy, kill) => {
 	const userDataDir = path.join(__dirname, 'chrome', 'profiles', 'bots', Date.now().toString());
 	if (fs.existsSync(userDataDir)) fs.rmSync(userDataDir, { recursive: true, force: true });
 
-	const browser = await launchBrowser(proxy, userDataDir, chromePath, browserArgs);
+	const browser = await launchBrowser(proxy, userDataDir, browserArgs);
 	const [page] = await browser.pages() || [await browser.newPage()];
 
 	setInterval(async () => {

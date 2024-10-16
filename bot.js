@@ -27,7 +27,7 @@ const plugins = path.join(__dirname, 'chrome', 'plugins');
 		console.log('NordVPN reconnected with a new IP');
 		await sleep(5000);
 
-		const browser = await launchBrowser(null, userDataDir, chromePath, browserArgs, plugins);
+		const browser = await launchBrowser(null, userDataDir, browserArgs, plugins);
 		const pages = await browser.pages();
 		const page = pages.length > 0 ? pages[0] : await browser.newPage();
 

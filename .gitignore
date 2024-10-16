@@ -5,3 +5,4 @@ node_modules
 proxies.txt
 proxies2.txt
 tokens.json
+scripts/arrays.original.js

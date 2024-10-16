@@ -17,9 +17,6 @@ const USERNAMES_ARRAY = [
 ];
 const MESSAGES_ARRAY = [ '﷽﷽ ﷽﷽﷽ ﷽﷽﷽', 'JEBAĆ ZDUNA CWELA JEBANEGO'];
 
-// Inne
-const chromePath = path.join(__dirname, 'chrome', 'win64-126.0.6478.182', 'chrome-win64', 'chrome.exe');
-
 (async () => {
 	const plugins = path.join(__dirname, 'chrome', 'plugins');
 	console.log(`Plugins: ${plugins}`);
@@ -36,7 +33,7 @@ const chromePath = path.join(__dirname, 'chrome', 'win64-126.0.6478.182', 'chrom
 		const randomNick = getRandomNickname(USERNAMES_ARRAY);
 		console.log(`Starting (${randomNick}): ${profile.path}`);
 
-		const browser = await launchBrowser(proxy, profile.path, chromePath, browserArgs, plugins);
+		const browser = await launchBrowser(proxy, profile.path, browserArgs, plugins);
 		browserLaunchCount++;
 
 		const pages = await browser.pages();

@@ -2,14 +2,17 @@ require('dotenv').config();
 
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-const proxyChain = require('proxy-chain');
-const path = require('node:path');
+const fs = require('node:fs');
 const getRandomGeoLocation = require('./scripts/getRandomGeoLocation.js');
 const browserArgs = require('./scripts/args.js');
 const loadProxies = require('./scripts/loadProxies.js');
 const injectScript = require('./scripts/injectScript.js');
 const getRoomData = require('./scripts/services/getRoomData.js');
 const getToken = require('./scripts/services/getToken.js');
+const launchBrowser = require('./scripts/launchBrowser.js');
+const { createProfileDir, getRandomNickname, setupRoom, openTargetRoom, waitForSelector } = require('./scripts/utils.js');
+const { USERNAMES, MESSAGES } = require('./scripts/arrays.js');
+const sleep = require('./scripts/sleep.js');
 
 puppeteer.use(StealthPlugin());
 
@@ -20,7 +23,7 @@ const getRandomElement = array => array[Math.floor(Math.random() * array.length)
 
 const injectRoomScript = async (page, cfg) => {
 	cfg.ignoreGeo = TARGET_ROOM_END <= cfg.index;
-	await injectScript(page, { ...cfg });
+	await injectScript(page, { ...cfg }, USERNAMES);
 
 	page.on('load', async () => {
 		console.log(`[${cfg.index}.${cfg.browserId}] Re-injecting room.js for ${cfg.roomName}`);
@@ -34,7 +37,7 @@ const injectRoomScript = async (page, cfg) => {
 
 		setTimeout(async () => {
 			try {
-				await injectScript(page, { ...cfg });
+				await injectScript(page, { ...cfg }, USERNAMES);
 			} catch (err) {
 				console.error(`[${cfg.index}.${cfg.browserId}]`, err);
 			}
@@ -43,51 +46,69 @@ const injectRoomScript = async (page, cfg) => {
 };
 
 const launchBrowserWithTwoTabs = async (roomConfigs, proxies, stats) => {
-	const browserId = stats.browsers + 1;
+	const browserId = ++stats.browsers;
 	const proxy = proxies[proxyIndex];
-	if (!proxy) throw new Error(`Missing proxies, received ${proxy}`);
 
+	if (!proxy) throw new Error(`Missing proxies, received ${proxy}`);
 	proxyIndex = (proxyIndex + 1) % proxies.length;
 
-	const newProxyUrl = await proxyChain.anonymizeProxy(proxy);
-	const browser = await puppeteer.launch({
-		headless: process.env.NODE_ENV === 'production',
-		userDataDir: path.resolve(__dirname, 'chrome', 'profiles', 'spam', roomConfigs[0].index.toString()),
-		args: [`--proxy-server=${newProxyUrl}`, ...browserArgs]
-	});
+	const profile = createProfileDir();
+	if (fs.existsSync(profile.path)) fs.rmSync(profile.path, { recursive: true, force: true });
 
-	stats.browsers++;
+	const browser = await launchBrowser(proxy, profile.path, browserArgs);
 	stats.tabs += roomConfigs.length;
 
-	const pages = await browser.pages();
+	const [initialPage] = await browser.pages();
+	const roomUrls = [];
 	let firstPageUsed = false;
 
-	try {
-		await Promise.all(roomConfigs.map(async cfg => {
-			let page;
-			if (!firstPageUsed) {
-				page = pages[0];
-				firstPageUsed = true;
-			} else {
-				page = await browser.newPage();
-			}
+	const handleConsoleMessage = async (msg, cfg) => {
+		const text = msg.text();
+		const logPrefix = `[${cfg.index}.${browserId}]`;
 
-			page.on('console', msg => {
-				const text = msg.text();
-				if (msg.type() === 'error') console.error(`[${cfg.index}.${browserId}]`, text);
-				else if (msg.type() === 'warning') console.warn(`[${cfg.index}.${browserId}]`, text);
-				else console.log(`[${cfg.index}.${browserId}]`, text);
-			});
+		switch (msg.type()) {
+		case 'error':
+			console.error(logPrefix, text);
+			break;
+		case 'warning':
+			console.warn(logPrefix, text);
+			break;
+		default:
+			console.log(logPrefix, text);
+			if (text.startsWith('Room started:')) {
+				const roomUrl = text.split('Room started: ')[1];
+				roomUrls.push({ url: roomUrl, browser });
+			}
+		}
+	};
+
+	try {
+		for (const cfg of roomConfigs) {
+			const page = firstPageUsed ? await browser.newPage() : initialPage;
+			firstPageUsed = true;
+
+			page.on('console', msg => handleConsoleMessage(msg, cfg));
 
 			cfg.browserId = browserId;
-
-			console.log(`[${cfg.index}.${browserId}] Launching "${cfg.roomName}" [${cfg.country?.toUpperCase()}]; Token: "${cfg.token}"`);
-			await page.goto('https://www.haxball.com/headless', { waitUntil: 'networkidle0' });
-
+			await openTargetRoom(page, 'https://www.haxball.com/headless');
 			await injectRoomScript(page, cfg);
-
 			stats.tokensUsed[cfg.token] = (stats.tokensUsed[cfg.token] || 0) + 1;
-		}));
+		}
+
+		await sleep(2000);
+
+		for (const room of roomUrls) {
+			const maxRuns = Math.floor(Math.random() * 5) + 1;
+
+			for (let runCount = 0; runCount < maxRuns; runCount++) {
+				const page = await room.browser.newPage();
+				await openTargetRoom(page, room.url);
+				await setupRoom(page, getRandomNickname(USERNAMES), MESSAGES);
+				const frame = page.frames().find(f => f.url().includes('game.html'));
+				if (frame) await waitForSelector(frame, 'input[data-hook="input"]', { visible: true, timeout: 35000 });
+				await sleep(1000);
+			}
+		}
 	} catch (err) {
 		console.error(`[-.${browserId}]`, err);
 	}

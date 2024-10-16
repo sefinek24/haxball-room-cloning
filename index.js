@@ -75,7 +75,7 @@ const launchBrowserWithTwoTabs = async (roomConfigs, proxies, stats) => {
 			break;
 		default:
 			console.log(logPrefix, text);
-			if (text.startsWith('Room started:')) {
+			if (text.startsWith('Room started:') && stats.browsers <= 5) {
 				const roomUrl = text.split('Room started: ')[1];
 				roomUrls.push({ url: roomUrl, browser });
 			}
@@ -95,7 +95,7 @@ const launchBrowserWithTwoTabs = async (roomConfigs, proxies, stats) => {
 			stats.tokensUsed[cfg.token] = (stats.tokensUsed[cfg.token] || 0) + 1;
 		}
 
-		if (stats.browsers >= 4) return;
+		if (stats.browsers >= 5) return;
 		await sleep(4000);
 
 		for (const room of roomUrls) {

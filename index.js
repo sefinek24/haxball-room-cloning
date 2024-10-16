@@ -95,6 +95,7 @@ const launchBrowserWithTwoTabs = async (roomConfigs, proxies, stats) => {
 			stats.tokensUsed[cfg.token] = (stats.tokensUsed[cfg.token] || 0) + 1;
 		}
 
+		if (stats.browsers >= 4) return;
 		await sleep(4000);
 
 		for (const room of roomUrls) {

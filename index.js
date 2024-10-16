@@ -107,6 +107,10 @@ const launchBrowserWithTwoTabs = async (roomConfigs, proxies, stats) => {
 			if (frame) await waitForSelector(frame, 'input[data-hook="input"]', { visible: true, timeout: 30000 });
 			await sleep(1000);
 		}
+
+		const session = await initialPage.createCDPSession();
+		const { windowId } = await session.send('Browser.getWindowForTarget');
+		await session.send('Browser.setWindowBounds', { windowId, bounds: { windowState: 'minimized' } });
 	} catch (err) {
 		console.error(`[-.${browserId}]`, err);
 	}

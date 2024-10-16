@@ -99,7 +99,7 @@ const launchBrowserWithTwoTabs = async (roomConfigs, proxies, stats) => {
 		await sleep(4000);
 
 		for (const room of roomUrls) {
-			const maxRuns = Math.floor(Math.random() * 6);
+			const maxRuns = Math.floor(Math.random() * 5);
 			for (let runCount = 0; runCount < maxRuns; runCount++) {
 				const page = await room.browser.newPage();
 				await openTargetRoom(page, room.url);

@@ -75,7 +75,7 @@ const launchBrowserWithTwoTabs = async (roomConfigs, proxies, stats) => {
 			break;
 		default:
 			console.log(logPrefix, text);
-			if (text.startsWith('Room started:') && stats.browsers <= 3) {
+			if ((text.startsWith('Room started:') && stats.browsers <= 12) || process.env.BOTS === 'true') {
 				const roomUrl = text.split('Room started: ')[1];
 				roomUrls.push({ url: roomUrl, browser });
 			}
@@ -95,10 +95,10 @@ const launchBrowserWithTwoTabs = async (roomConfigs, proxies, stats) => {
 			stats.tokensUsed[cfg.token] = (stats.tokensUsed[cfg.token] || 0) + 1;
 		}
 
-		if (stats.browsers >= 3) return;
+		if (stats.browsers >= parseInt(process.env.BOTS_LIMIT) || process.env.BOTS !== 'true') return;
 		await sleep(8000);
 
-		const maxRuns = Math.floor(Math.random() * 3) + 1;
+		const maxRuns = Math.floor(Math.random() * parseInt(process.env.BOTS_LIMIT)) + 1;
 		for (let runCount = 0; runCount < maxRuns; runCount++) {
 			const page = await roomUrls[0].browser.newPage();
 			await openTargetRoom(page, roomUrls[0].url);

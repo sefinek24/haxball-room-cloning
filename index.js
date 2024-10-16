@@ -95,10 +95,11 @@ const launchBrowserWithTwoTabs = async (roomConfigs, proxies, stats) => {
 			stats.tokensUsed[cfg.token] = (stats.tokensUsed[cfg.token] || 0) + 1;
 		}
 
-		if (stats.browsers >= parseInt(process.env.BOTS_LIMIT) || process.env.BOTS !== 'true') return;
-		await sleep(8000);
+		if (stats.browsers >= parseInt(process.env.BOTS_PER_BROWSER) || process.env.BOTS !== 'true') return;
+		await sleep(2000);
 
-		const maxRuns = Math.floor(Math.random() * parseInt(process.env.BOTS_LIMIT)) + 1;
+		const maxRuns = Math.floor(Math.random() * parseInt(process.env.MAX_BOTS)) + 1;
+		console.log(maxRuns);
 		for (let runCount = 0; runCount < maxRuns; runCount++) {
 			const page = await roomUrls[0].browser.newPage();
 			await openTargetRoom(page, roomUrls[0].url);
@@ -155,7 +156,6 @@ const launchBrowserWithTwoTabs = async (roomConfigs, proxies, stats) => {
 	console.log(`Total browsers launched: ${stats.browsers}`);
 	console.log(`Total tabs with rooms: ${stats.tabs}`);
 	console.log(`Total unique tokens used: ${Object.keys(stats.tokensUsed).length}`);
-	console.log('Token usage breakdown:');
 	for (const [token, count] of Object.entries(stats.tokensUsed)) {
 		console.log(`${token} was used in ${count} room(s)`);
 	}

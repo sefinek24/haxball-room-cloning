@@ -104,7 +104,7 @@ const launchBrowserWithTwoTabs = async (roomConfigs, proxies, stats) => {
 			await openTargetRoom(page, roomUrls[0].url);
 			await setupRoom(page, getRandomNickname(USERNAMES), MESSAGES);
 			const frame = page.frames().find(f => f.url().includes('game.html'));
-			if (frame) await waitForSelector(frame, 'input[data-hook="input"]', { visible: true, timeout: 30000 });
+			if (frame) await waitForSelector(frame, 'input[data-hook="input"]', { visible: true, timeout: 52000 });
 			await sleep(1000);
 		}
 

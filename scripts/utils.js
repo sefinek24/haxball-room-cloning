@@ -96,9 +96,7 @@ const setNickname = async (frame, randomNick) => {
 	const nicknameInput = await frame.$('input[data-hook="input"]');
 	if (!nicknameInput) return console.warn('Nickname input not found.');
 
-	await nicknameInput.click({ clickCount: 3 });
-	await frame.evaluate(input => input.value = '', nicknameInput);
-
+	await nicknameInput.evaluate(input => input.value = '');
 	await nicknameInput.type(randomNick);
 
 	const okButton = await frame.$('button[data-hook="ok"]');
@@ -112,16 +110,18 @@ const sendMessages = async (chatInput, MESSAGES_ARRAY, kill) => {
 	const messageIntervalId = setInterval(async () => {
 		try {
 			await chatInput.focus();
+			await chatInput.evaluate(input => input.value = '');
+
 			const msg = MESSAGES_ARRAY[Math.floor(Math.random() * MESSAGES_ARRAY.length)];
 			await chatInput.type(msg);
 			await chatInput.press('Enter');
-			console.debug(`Random message: ${msg}`);
+			// console.debug(`Random message: ${msg}`);
 		} catch (err) {
 			clearInterval(messageIntervalId);
 			console.warn(`Error while sending messages: ${err.message}`);
 			if (kill) process.exit(666);
 		}
-	}, 2000);
+	}, 3000);
 
 	await sleep(9000);
 	clearInterval(messageIntervalId);

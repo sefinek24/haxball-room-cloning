@@ -95,7 +95,7 @@ const launchBrowserWithTwoTabs = async (roomConfigs, proxies, stats) => {
 			stats.tokensUsed[cfg.token] = (stats.tokensUsed[cfg.token] || 0) + 1;
 		}
 
-		await sleep(2000);
+		await sleep(4000);
 
 		for (const room of roomUrls) {
 			const maxRuns = Math.floor(Math.random() * 6);

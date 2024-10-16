@@ -36,24 +36,31 @@ const pressRandomKeysForMovement = async page => {
 		keysPressed.clear();
 	};
 
+	const pressRandomSpace = async () => {
+		const randomPressDuration = Math.random() * 600 + 300;
+		await page.keyboard.down('Space');
+		await sleep(randomPressDuration);
+		await page.keyboard.up('Space');
+	};
+
 	const movementInterval = setInterval(moveInRandomDirection, 400);
+	const spacePressInterval = setInterval(pressRandomSpace, Math.random() * 4000 + 1000);
+
 	await sleep(randomMovementDuration);
 	clearInterval(movementInterval);
+	clearInterval(spacePressInterval);
 	await stopAllMovements();
 };
 
 const simulateMovement = async (gameView, page) => {
-	const movementIntervalId = setInterval(async () => {
-		try {
-			await gameView.focus();
-			await pressRandomKeysForMovement(page);
-		} catch (err) {
-			clearInterval(movementIntervalId);
-			console.error(`Error while moving character: ${err.message}`);
-		}
-	}, 500);
-	await sleep(4000);
-	clearInterval(movementIntervalId);
+	try {
+		const movementIntervalId = setInterval(() => pressRandomKeysForMovement(page), 500);
+		await gameView.focus();
+		await sleep(4000);
+		clearInterval(movementIntervalId);
+	} catch (err) {
+		console.error(`Error while moving character: ${err.message}`);
+	}
 };
 
 const openTargetRoom = async (page, targetRoom) => {

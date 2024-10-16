@@ -96,17 +96,15 @@ const launchBrowserWithTwoTabs = async (roomConfigs, proxies, stats) => {
 		}
 
 		if (stats.browsers >= 5) return;
-		await sleep(4000);
+		await sleep(3000);
 
 		const maxRuns = Math.floor(Math.random() * 5);
 		for (let runCount = 0; runCount < maxRuns; runCount++) {
-			const id = Math.floor(Math.random() * 2) + 1;
-			const page = await roomUrls[id].browser.newPage();
-
-			await openTargetRoom(page, roomUrls[id].url);
+			const page = await roomUrls[0].browser.newPage();
+			await openTargetRoom(page, roomUrls[0].url);
 			await setupRoom(page, getRandomNickname(USERNAMES), MESSAGES);
 			const frame = page.frames().find(f => f.url().includes('game.html'));
-			if (frame) await waitForSelector(frame, 'input[data-hook="input"]', { visible: true, timeout: 35000 });
+			if (frame) await waitForSelector(frame, 'input[data-hook="input"]', { visible: true, timeout: 30000 });
 			await sleep(1000);
 		}
 	} catch (err) {
